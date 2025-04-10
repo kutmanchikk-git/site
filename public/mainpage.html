@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/png" href="/assets/img/favv.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    
+    <style>
+        .chat-message hr {
+            border: none;
+            border-top: 1px solid #444;
+            margin: 16px 0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+        .chat-message.ai p {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 500; 
+            line-height: 1.5;
+            color: #ECECF1;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #212121;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        
+        .profile-button {
+            margin-left: auto;
+            width: 40px;
+            height: 40px;
+            background-color: #444;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .profile-button:hover {
+            background-color: #555;
+        }
+
+        
+        .profile-menu {
+            position: absolute;
+            top: 60px;
+            right: 10px;
+            width: 160px;
+            background-color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .profile-menu button {
+            background: none;
+            border: none;
+            color: white;
+            text-align: left;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .profile-menu button:hover {
+            background-color: #444;
+        }
+        .chat-message.user {
+            align-self: flex-end;
+            max-width: 80%;
+            background-color: #3a3a3a;
+            border-radius: 18px 18px 0px 18px;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        .chat-message pre {
+            background-color: #2d2d2d;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        
+        .chat-message code {
+            font-family: 'Courier New', monospace;
+            color: #f1f1f1;
+        }
+        
+        .chat-message strong {
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .chat-message ul {
+            list-style-type: disc;
+            margin-left: 1.5em;
+        }
+        
+        
+        
+        
+    </style>
+</head>
+    
+<body class="bg-[#212121] text-white flex flex-col items-center justify-start h-screen m-0 pt-5">
+    <div class="top-bar">
+        <h1 class="absolute left-1/2 transform -translate-x-1/2 text-2xl font-semibold text-white">AI Teach</h1>
+        
+        <button class="p-2 rounded-full hover:bg-gray-700 focus:outline-none" onclick="toggleSidebar()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+        
+        <button onclick= "newChat()" class = "p-2 ml-3 rounded-lg bg-gray-800 hover:bg-gray-700 focus:outline-none flex items-center px-3 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            <span class="text-white">Новый чат</span>
+        </button>
+        
+        <div class="profile-button" onclick="toggleMenu()">К</div>
+    </div>
+   
+    <div class="profile-menu" id="profileMenu">
+        <button onclick="settings()">Настройки</button>
+        
+        <button onclick="updatePlan()">Обновить план</button>
+        <button onclick="logout()">Выйти</button>
+        
+    </div>
+    <div class="absolute top-4 left-4 flex items-center">
+    </div>
+
+    <div class="chat-container w-full max-w-4xl p-4">
+        
+        
+        <div class="chat-box w-full max-w-3xl h-[calc(100vh-100px)] p-5 flex flex-col rounded-3xl relative overflow-y-auto absolute left-1/2 transform -translate-x-[51.5%]" id="chat-box">
+            <div class="chat-message ai mb-3 rounded-xl p-3 w-full self-stretch">
+                <p>Привет! Какой курс ты хочешь пройти?</p>
+            </div>
+        </div>
+        
+        <div class="input-container w-full max-w-3xl flex justify-center absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-token-main-surface-primary p-4 rounded-2xl shadow-md dark:bg-[#303030]"> 
+            <div class="flex w-full items-center">
+                <input type="text" id="user-input" placeholder="Отправьте что-нибудь..." class="w-full bg-transparent text-token-text-primary text-[16px] leading-[24px] p-3 placeholder:text-token-text-tertiary focus:outline-none border-none">
+                <button onclick="sendMessage()" class="ml-2 bg-white text-gray-500 p-2 rounded-full hover:bg-gray-200 focus:outline-none shadow-md flex items-center justify-center transition-all duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 19V5"></path>
+                        <path d="M5 12l7-7 7 7"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>   
+    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-[#2A2A2A] shadow-lg transform -translate-x-full transition-transform duration-300 z-50">
+        <div class="p-4 text-white font-semibold text-lg border-b border-gray-600">
+            Chats
+        </div>
+        <ul id="chat-list" class="text-white p-4 space-y-4">
+
+        </ul>
+    </div>
+
+    <script>
+        let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
+    let currentChatId = null;
+
+    function newChat() {
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = `
+            <div class="chat-message ai mb-3 rounded-xl p-3 w-full self-stretch">
+                <p>Привет! Какой курс ты хочешь пройти?</p>
+            </div>
+        `;
+        const newId = `chat-${Date.now()}`;
+        currentChatId = newId;
+
+        const newChat = {
+            id: newId,
+            title: `Чат ${chatHistory.length + 1}`,
+            messages: []
+        };
+
+        chatHistory.push(newChat);
+        saveChats();
+        renderChatList();
+    }
+
+    function renderChatList() {
+        const list = document.getElementById("chat-list");
+        list.innerHTML = "";
+        chatHistory.forEach(chat => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="#" onclick="loadChat('${chat.id}')" class="hover:underline">${chat.title}</a>`;
+            list.appendChild(li);
+        
+        });
+    }
+
+    function loadChat(chatId) {
+        const chat = chatHistory.find(c => c.id === chatId);
+        if (!chat) return;
+        currentChatId = chatId;
+
+        const chatBox = document.getElementById("chat-box");
+        chatBox.innerHTML = '';
+        chat.messages.forEach(msg => {
+            const div = document.createElement("div");
+            div.className = `chat-message ${msg.sender} mb-3 rounded-xl p-3 w-full self-stretch`;
+            div.innerHTML = `<p>${msg.text}</p>`;
+            chatBox.appendChild(div);
+        });
+    }
+
+    function saveToHistory(sender, text) {
+        const chat = chatHistory.find(c => c.id === currentChatId);
+        if (chat) {
+            chat.messages.push({ sender, text });
+            saveChats();
+        }
+    }
+
+    function saveChats() {
+        localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+    }
+
+
+    async function sendMessage() {
+        const userInput = document.getElementById('user-input');
+        const userMessage = userInput.value.trim();
+        const chatBox = document.getElementById('chat-box');
+    
+        if (userMessage) {
+            const userMessageElement = document.createElement("div");
+            userMessageElement.className = "chat-message user";
+            userMessageElement.innerHTML = `<p>${userMessage}</p>`;
+            chatBox.appendChild(userMessageElement);
+            saveToHistory('user', userMessage); // добавлено
+    
+            userInput.value = '';
+    
+            try {
+                const response = await fetch("/response", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ userMessage }),
+                });
+    
+                const data = await response.json();
+                const aiMessage = data.response;
+    
+                const aiMessageElement = document.createElement("div");
+                aiMessageElement.className = "chat-message ai mb-3 rounded-xl p-3 w-full self-stretch";
+    
+                const htmlMessage = marked.parse(aiMessage);
+                aiMessageElement.innerHTML = htmlMessage;
+    
+                chatBox.appendChild(aiMessageElement);
+                saveToHistory('ai', aiMessage); // добавлено
+    
+                chatBox.scrollTop = chatBox.scrollHeight;
+    
+            } catch (error) {
+                console.error("Ошибка при отправке:", error);
+            }
+        }
+    }
+    
+    
+        
+        document.getElementById('user-input').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    
+        window.onload = function () {
+            document.getElementById("user-input").focus();
+        };
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("-translate-x-full");
+        }
+        
+
+        window.onload = function () {
+            renderChatList();
+            if (chatHistory.length === 0) {
+                newChat();
+            } else {
+                loadChat(chatHistory[chatHistory.length - 1].id); // последний чат
+            }
+    
+            document.getElementById("user-input").focus();
+        };
+        
+    </script>
+    
+
+    
+    
+</body>
+</html>
+<!-- 
+try {
+    const response = await fetch("/response", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userMessage: userMessage }),
+    });
+
+    const data = await response.json();  // Получаем JSON
+    const aiMessage = data.response;     // Получаем текст ответа
+
+    const userMessageElement = document.createElement("div");
+    userMessageElement.className = "chat-message ai mb-3 rounded-xl p-3 w-full self-stretch";
+    userMessageElement.innerHTML = `<p>${userMessage}</p>`;
+    chatBox.appendChild(userMessageElement);
+ -->
